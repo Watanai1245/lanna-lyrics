@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SongCategory {
+  PHLENG // เพลง
+  SAW // ซอ
+  RAMWONG // ฟ้อน / รำวง
+}
+
+model Song {
+  id        String       @id @default(cuid())
+  slug      String       @unique
+  title     String
+  category  SongCategory
+  note      String? // free-text remark, shown at the bottom of the song page and in the admin list
+  sections  Section[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+// One ท่อน (musical section) of a song. `cells` is a flat list of ห้อง
+// (measure) strings, e.g. "ซ ดํ ท ซ" — the UI wraps them 8-per-line to
+// match the original notation sheets. `introCells` / `introNote` hold the
+// short pickup line some sections open with, e.g. "- - - ซ" / "- ซ ซ ซ"
+// plus a note like "( เล่นแค่รอบแรก )". `cellColors` / `introColors` are
+// optional whole-cell color overrides, keyed "<cellIndex>" mapping to a CSS
+// color string. `lineBreaks` lists cell indexes after which an extra visual
+// gap is inserted (a soft line break within the section, short of starting
+// a whole new ท่อน). `freeText`, when set, replaces the ห้อง grid for
+// sections whose original notation isn't divided into measures (e.g. the
+// sustained-tone intro line in "หมอกมุงเมือง").
+model Section {
+  id          String   @id @default(cuid())
+  song        Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songId      String
+  name        String // "ท่อน ซอล" — may be "" for songs without named sections
+  order       Int      @default(0)
+  introCells  Json?
+  introNote   String?
+  introColors Json?
+  cells       Json
+  cellColors  Json?
+  lineBreaks  Json?
+  freeText    String?
+
+  @@index([songId])
+}
