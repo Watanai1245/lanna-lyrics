@@ -14,7 +14,7 @@ export default async function SongsPage({
 }) {
   const initialQuery = typeof searchParams.q === "string" ? searchParams.q : "";
 
-  const [songs, allFull] = await Promise.all([getAllSongs(), getAllSongsFull()]);
+  const [songs, allFull] = await Promise.all([getAllSongs({ activeOnly: true }), getAllSongsFull()]);
 
   return (
     <>

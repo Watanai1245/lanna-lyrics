@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { clearAdminSession, requireAdmin } from "@/lib/adminSession";
-import { createSong, updateSong, deleteSong } from "@/lib/songs";
+import { createSong, updateSong, deleteSong, setSongActive } from "@/lib/songs";
 import type { SongInput } from "@/lib/types";
 
 export async function logoutAction(): Promise<void> {
@@ -52,4 +52,13 @@ export async function deleteSongAction(id: string): Promise<void> {
   revalidatePath("/songs");
   revalidatePath("/");
   revalidatePath("/admin/songs");
+}
+
+export async function toggleSongActiveAction(id: string, active: boolean): Promise<void> {
+  await requireAdmin();
+  const { slug } = await setSongActive(id, active);
+  revalidatePath("/songs");
+  revalidatePath("/");
+  revalidatePath("/admin/songs");
+  revalidatePath(`/songs/${slug}`);
 }

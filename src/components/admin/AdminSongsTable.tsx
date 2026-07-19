@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import DeleteSongButton from "@/components/admin/DeleteSongButton";
+import ToggleActiveButton from "@/components/admin/ToggleActiveButton";
 import { CATEGORY_LABELS } from "@/lib/notation";
 import type { SongListItem } from "@/lib/types";
 
@@ -81,16 +82,20 @@ export default function AdminSongsTable({ songs }: { songs: SongListItem[] }) {
                   </button>
                 </th>
                 <th>Note</th>
+                <th>สถานะ</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {rows.map((song) => (
-                <tr key={song.id}>
+                <tr key={song.id} className={song.active ? undefined : "row-inactive"}>
                   <td>{song.title}</td>
                   <td>{CATEGORY_LABELS[song.category]}</td>
                   <td className="admin-table-note" title={song.note || undefined}>
                     {song.note || <span style={{ color: "var(--muted)" }}>—</span>}
+                  </td>
+                  <td>
+                    <ToggleActiveButton id={song.id} active={song.active} />
                   </td>
                   <td>
                     <div style={{ display: "flex", gap: 14, justifyContent: "flex-end" }}>

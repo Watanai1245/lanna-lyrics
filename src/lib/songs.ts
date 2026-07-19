@@ -44,13 +44,19 @@ function mapSong(song: SongWithSections): SongData {
     slug: song.slug,
     category: song.category,
     note: song.note ?? "",
+    active: song.active,
     sections,
   };
 }
 
-export async function getAllSongs(category?: SongCategory): Promise<SongListItem[]> {
+export async function getAllSongs(opts: { category?: SongCategory; activeOnly?: boolean } = {}): Promise<
+  SongListItem[]
+> {
   const songs = await prisma.song.findMany({
-    where: category ? { category } : undefined,
+    where: {
+      ...(opts.category ? { category: opts.category } : {}),
+      ...(opts.activeOnly ? { active: true } : {}),
+    },
     orderBy: [{ title: "asc" }],
   });
   return songs.map((s) => ({
@@ -59,17 +65,19 @@ export async function getAllSongs(category?: SongCategory): Promise<SongListItem
     title: s.title,
     category: s.category,
     note: s.note ?? "",
+    active: s.active,
   }));
 }
 
 export async function getFeaturedSongs(limit = 4): Promise<SongListItem[]> {
-  const songs = await getAllSongs();
+  const songs = await getAllSongs({ activeOnly: true });
   return songs.slice(0, limit);
 }
 
-/** Full song + section data for every song, used to build the "download all" zip. */
+/** Full song + section data for every active song, used to build the "download all" zip. */
 export async function getAllSongsFull(): Promise<SongData[]> {
   const songs = await prisma.song.findMany({
+    where: { active: true },
     orderBy: [{ title: "asc" }],
     include: { sections: true },
   });
@@ -155,4 +163,9 @@ export async function updateSong(id: string, input: SongInput): Promise<SongData
 
 export async function deleteSong(id: string): Promise<void> {
   await prisma.song.delete({ where: { id } });
+}
+
+export async function setSongActive(id: string, active: boolean): Promise<{ slug: string }> {
+  const song = await prisma.song.update({ where: { id }, data: { active }, select: { slug: true } });
+  return song;
 }

@@ -5,6 +5,7 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import PosterActions from "@/components/PosterActions";
 import { getSongBySlug } from "@/lib/songs";
+import { isAdminSession } from "@/lib/adminSession";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function SongDetailPage({ params }: { params: { slug: string } }) {
   const song = await getSongBySlug(params.slug);
   if (!song) notFound();
+  if (!song.active && !(await isAdminSession())) notFound();
 
   return (
     <>

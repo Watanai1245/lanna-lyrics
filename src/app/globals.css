@@ -839,6 +839,45 @@ nav.site-nav a:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.row-inactive td {
+  color: var(--muted);
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--paper);
+  color: var(--muted);
+  cursor: pointer;
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+}
+.status-pill.status-on {
+  border-color: var(--green);
+  background: var(--green-tint);
+  color: var(--green-deep);
+}
+.status-pill.status-on .status-dot {
+  background: var(--green);
+}
+.status-pill.status-off {
+  border-color: var(--line);
+  background: var(--paper);
+  color: var(--muted);
+}
+.status-pill.status-off .status-dot {
+  background: var(--muted);
+}
 .th-sort {
   background: none;
   border: none;

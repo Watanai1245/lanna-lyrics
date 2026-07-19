@@ -26,7 +26,7 @@ export type SongInput = {
   sections: SectionInput[];
 };
 
-export type SongData = Omit<SongInput, "sections"> & { id: string; sections: SectionData[] };
+export type SongData = Omit<SongInput, "sections"> & { id: string; sections: SectionData[]; active: boolean };
 
 export type SongListItem = {
   id: string;
@@ -34,4 +34,5 @@ export type SongListItem = {
   title: string;
   category: SongCategory;
   note: string;
+  active: boolean;
 };

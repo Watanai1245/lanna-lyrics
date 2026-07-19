@@ -24,3 +24,8 @@ export async function requireAdmin(): Promise<void> {
     throw new Error("Unauthorized");
   }
 }
+
+export async function isAdminSession(): Promise<boolean> {
+  const token = cookies().get(SESSION_COOKIE_NAME)?.value;
+  return verifySessionToken(token);
+}
