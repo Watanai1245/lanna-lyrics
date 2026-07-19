@@ -18,56 +18,9 @@
   --font-body: "Sarabun", "Noto Sans Thai", "Leelawadee UI", "Tahoma", "Segoe UI", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ink: #e9efe7;
-    --paper: #0e1712;
-    --paper-raised: #17231c;
-    --green: #4fae7c;
-    --green-deep: #0e4229;
-    --green-tint: #16281f;
-    --gold: #e3c168;
-    --gold-soft: #b8901e;
-    --gold-tint: #26200f;
-    --red: #e0776e;
-    --red-tint: #2d1b18;
-    --navy: #92a9dd;
-    --line: #2a3830;
-    --muted: #a6b0a2;
-  }
-}
-:root[data-theme="dark"] {
-  --ink: #e9efe7;
-  --paper: #0e1712;
-  --paper-raised: #17231c;
-  --green: #4fae7c;
-  --green-deep: #0e4229;
-  --green-tint: #16281f;
-  --gold: #e3c168;
-  --gold-soft: #b8901e;
-  --gold-tint: #26200f;
-  --red: #e0776e;
-  --red-tint: #2d1b18;
-  --navy: #92a9dd;
-  --line: #2a3830;
-  --muted: #a6b0a2;
-}
-:root[data-theme="light"] {
-  --ink: #1b2a1f;
-  --paper: #fbf7ec;
-  --paper-raised: #ffffff;
-  --green: #1b6b3f;
-  --green-deep: #0e4229;
-  --green-tint: #e3eee2;
-  --gold: #b8901e;
-  --gold-soft: #e7c866;
-  --gold-tint: #f7ecc9;
-  --red: #c1352b;
-  --red-tint: #f5ddd9;
-  --navy: #24396b;
-  --line: #e4dfc9;
-  --muted: #6e6752;
-}
+/* Theme is intentionally locked to the light palette above — the school
+   site's brand colors (green/gold/cream) shouldn't shift with the visitor's
+   OS dark-mode setting. */
 
 * {
   box-sizing: border-box;
@@ -619,7 +572,7 @@ nav.site-nav a:hover {
   text-align: center;
   font-weight: 700;
   padding: clamp(4px, 1.5vw, 11px) clamp(0px, 0.5vw, 8px);
-  font-size: clamp(9px, 3vw, 22px);
+  font-size: clamp(8px, 2.55vw, 19px);
   line-height: 1.15;
   letter-spacing: clamp(-0.04em, 0em, 0.08em);
   min-width: 0;
