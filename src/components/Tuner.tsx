@@ -2,17 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type StringDef = { note: string; label: string; freq: number };
-
-const STANDARD_TUNING: StringDef[] = [
-  { note: "E2", label: "สาย 6 · E ต่ำ", freq: 82.41 },
-  { note: "A2", label: "สาย 5 · A", freq: 110.0 },
-  { note: "D3", label: "สาย 4 · D", freq: 146.83 },
-  { note: "G3", label: "สาย 3 · G", freq: 196.0 },
-  { note: "B3", label: "สาย 2 · B", freq: 246.94 },
-  { note: "E4", label: "สาย 1 · E สูง", freq: 329.63 },
-];
-
 const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const STRIP_UNIT_PERCENT = 22; // horizontal % of width per semitone on the note filmstrip
 const STRIP_RADIUS = 3; // how many semitones either side of center to render
@@ -21,6 +10,8 @@ const BUFFER_SIZE = 2048;
 const MIN_RMS = 0.01;
 const IN_TUNE_CENTS = 5;
 const CLAMP_CENTS = 50;
+const HISTORY_SIZE = 7; // frames averaged (via median) to steady the note strip
+const JUMP_RESET_SEMITONES = 6; // a bigger jump than this snaps instantly instead of easing in
 
 /** Autocorrelation pitch detection (the well-known "ACF2+" technique). */
 function autoCorrelate(buffer: Float32Array, sampleRate: number): number {
@@ -80,14 +71,6 @@ function autoCorrelate(buffer: Float32Array, sampleRate: number): number {
   return t0 > 0 ? sampleRate / t0 : -1;
 }
 
-function centsOff(freq: number, target: number): number {
-  return 1200 * Math.log2(freq / target);
-}
-
-function closestString(freq: number): StringDef {
-  return STANDARD_TUNING.reduce((best, s) => (Math.abs(freq - s.freq) < Math.abs(freq - best.freq) ? s : best));
-}
-
 /** Continuous (fractional) MIDI note number for a frequency, A4 = 440Hz = note 69. */
 function continuousMidiOf(freq: number): number {
   return 69 + 12 * Math.log2(freq / 440);
@@ -97,8 +80,14 @@ function noteNameAt(midi: number): string {
   return NOTE_NAMES[((midi % 12) + 12) % 12];
 }
 
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
 type Status = "idle" | "listening" | "denied" | "unsupported";
-type Reading = { target: StringDef; cents: number; freq: number; continuousMidi: number };
+type Reading = { freq: number; smoothedMidi: number; cents: number };
 
 function HzReadout({ value }: { value: number | null }) {
   const text = value ? value.toFixed(1) : "---.-";
@@ -116,17 +105,12 @@ function HzReadout({ value }: { value: number | null }) {
 
 export default function Tuner() {
   const [status, setStatus] = useState<Status>("idle");
-  const [pinned, setPinned] = useState<StringDef | null>(null);
   const [reading, setReading] = useState<Reading | null>(null);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
-  const pinnedRef = useRef<StringDef | null>(null);
-
-  useEffect(() => {
-    pinnedRef.current = pinned;
-  }, [pinned]);
+  const historyRef = useRef<number[]>([]);
 
   function stop() {
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
@@ -135,6 +119,7 @@ export default function Tuner() {
     streamRef.current = null;
     audioCtxRef.current?.close().catch(() => {});
     audioCtxRef.current = null;
+    historyRef.current = [];
     setReading(null);
     setStatus("idle");
   }
@@ -166,9 +151,18 @@ export default function Tuner() {
         analyser.getFloatTimeDomainData(buffer);
         const freq = autoCorrelate(buffer, ctx.sampleRate);
         if (freq > 0) {
-          const target = pinnedRef.current ?? closestString(freq);
-          setReading({ target, cents: centsOff(freq, target.freq), freq, continuousMidi: continuousMidiOf(freq) });
+          const midi = continuousMidiOf(freq);
+          const hist = historyRef.current;
+          if (hist.length > 0 && Math.abs(midi - median(hist)) > JUMP_RESET_SEMITONES) {
+            hist.length = 0;
+          }
+          hist.push(midi);
+          if (hist.length > HISTORY_SIZE) hist.shift();
+          const smoothedMidi = median(hist);
+          const cents = (smoothedMidi - Math.round(smoothedMidi)) * 100;
+          setReading({ freq, smoothedMidi, cents });
         } else {
+          historyRef.current = [];
           setReading(null);
         }
         rafRef.current = requestAnimationFrame(tick);
@@ -182,15 +176,15 @@ export default function Tuner() {
 
   useEffect(() => () => stop(), []);
 
+  const inTune = Boolean(reading) && Math.abs(reading!.cents) <= IN_TUNE_CENTS;
   const cents = reading ? Math.max(-CLAMP_CENTS, Math.min(CLAMP_CENTS, reading.cents)) : 0;
   const markerPercent = 50 - (cents / CLAMP_CENTS) * 50;
-  const inTune = Boolean(reading) && Math.abs(reading!.cents) <= IN_TUNE_CENTS;
 
-  const continuousMidi = reading ? reading.continuousMidi : pinned ? continuousMidiOf(pinned.freq) : 69;
-  const centerN = Math.round(continuousMidi);
+  const smoothedMidi = reading ? reading.smoothedMidi : 69;
+  const centerN = Math.round(smoothedMidi);
   const strip = Array.from({ length: STRIP_RADIUS * 2 + 1 }, (_, i) => {
     const n = centerN - STRIP_RADIUS + i;
-    return { n, name: noteNameAt(n), left: 50 + (continuousMidi - n) * STRIP_UNIT_PERCENT };
+    return { n, name: noteNameAt(n), left: 50 + (smoothedMidi - n) * STRIP_UNIT_PERCENT };
   });
 
   const fillFrom = Math.min(50, markerPercent);
@@ -198,28 +192,10 @@ export default function Tuner() {
 
   return (
     <div className="tuner-card">
-      <div className="tuner-strings">
-        {STANDARD_TUNING.map((s) => {
-          const isPinned = pinned?.note === s.note;
-          const isActive = reading?.target.note === s.note;
-          return (
-            <button
-              key={s.note}
-              type="button"
-              className={`tuner-string-btn${isPinned ? " pinned" : ""}${isActive ? " active" : ""}`}
-              onClick={() => setPinned((p) => (p?.note === s.note ? null : s))}
-              title={s.label}
-            >
-              <span className="tuner-string-note">{s.note}</span>
-              <span className="tuner-string-label">{s.label}</span>
-            </button>
-          );
-        })}
-      </div>
       <p className="tuner-hint">
-        {pinned
-          ? `กำลังจับเสียงเทียบกับสาย ${pinned.note} (แตะซ้ำเพื่อยกเลิก)`
-          : "แตะเลือกสายที่จะตั้ง หรือปล่อยไว้ให้ระบบจับสายที่ใกล้เสียงที่สุดอัตโนมัติ"}
+        {status === "listening"
+          ? "ดีดสายหรือเป่าโน้ต แล้วดูตัวโน้ตที่อยู่กลางเส้นแดง — จะเป็นสีเขียวเมื่อเสียงตรง"
+          : "กดเริ่มฟังเสียง แล้วเล่นโน้ตที่ต้องการตั้ง ระบบจะจับโน้ตที่ใกล้เคียงที่สุดให้อัตโนมัติ"}
       </p>
 
       <div className={`tuner-strip-panel${status === "listening" ? "" : " tuner-strip-panel-off"}`}>
@@ -249,7 +225,11 @@ export default function Tuner() {
 
         <div className="tuner-note-strip">
           {strip.map((cell) => (
-            <div key={cell.n} className="tuner-note-cell" style={{ left: `${cell.left}%` }}>
+            <div
+              key={cell.n}
+              className={`tuner-note-cell${cell.n === centerN && inTune ? " in-tune" : ""}`}
+              style={{ left: `${cell.left}%` }}
+            >
               {cell.name}
             </div>
           ))}
