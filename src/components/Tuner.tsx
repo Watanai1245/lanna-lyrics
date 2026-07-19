@@ -13,6 +13,10 @@ const STANDARD_TUNING: StringDef[] = [
   { note: "E4", label: "สาย 1 · E สูง", freq: 329.63 },
 ];
 
+const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const STRIP_UNIT_PERCENT = 22; // horizontal % of width per semitone on the note filmstrip
+const STRIP_RADIUS = 3; // how many semitones either side of center to render
+
 const BUFFER_SIZE = 2048;
 const MIN_RMS = 0.01;
 const IN_TUNE_CENTS = 5;
@@ -84,8 +88,31 @@ function closestString(freq: number): StringDef {
   return STANDARD_TUNING.reduce((best, s) => (Math.abs(freq - s.freq) < Math.abs(freq - best.freq) ? s : best));
 }
 
+/** Continuous (fractional) MIDI note number for a frequency, A4 = 440Hz = note 69. */
+function continuousMidiOf(freq: number): number {
+  return 69 + 12 * Math.log2(freq / 440);
+}
+
+function noteNameAt(midi: number): string {
+  return NOTE_NAMES[((midi % 12) + 12) % 12];
+}
+
 type Status = "idle" | "listening" | "denied" | "unsupported";
-type Reading = { target: StringDef; cents: number; freq: number };
+type Reading = { target: StringDef; cents: number; freq: number; continuousMidi: number };
+
+function HzReadout({ value }: { value: number | null }) {
+  const text = value ? value.toFixed(1) : "---.-";
+  return (
+    <div className="tuner-hz">
+      {text.split("").map((ch, i) => (
+        <span key={i} className={ch === "." ? "tuner-hz-dot" : "tuner-hz-digit"}>
+          {ch}
+        </span>
+      ))}
+      <span className="tuner-hz-unit">Hz</span>
+    </div>
+  );
+}
 
 export default function Tuner() {
   const [status, setStatus] = useState<Status>("idle");
@@ -140,7 +167,7 @@ export default function Tuner() {
         const freq = autoCorrelate(buffer, ctx.sampleRate);
         if (freq > 0) {
           const target = pinnedRef.current ?? closestString(freq);
-          setReading({ target, cents: centsOff(freq, target.freq), freq });
+          setReading({ target, cents: centsOff(freq, target.freq), freq, continuousMidi: continuousMidiOf(freq) });
         } else {
           setReading(null);
         }
@@ -156,15 +183,18 @@ export default function Tuner() {
   useEffect(() => () => stop(), []);
 
   const cents = reading ? Math.max(-CLAMP_CENTS, Math.min(CLAMP_CENTS, reading.cents)) : 0;
-  const needlePercent = 50 + (cents / CLAMP_CENTS) * 50;
+  const markerPercent = 50 - (cents / CLAMP_CENTS) * 50;
   const inTune = Boolean(reading) && Math.abs(reading!.cents) <= IN_TUNE_CENTS;
 
-  let verdict = "เล่นสายกีตาร์ได้เลย";
-  if (reading) {
-    if (inTune) verdict = "ตรงแล้ว ✓";
-    else if (reading.cents < 0) verdict = "ต่ำไป — ขันให้ตึงขึ้น";
-    else verdict = "สูงไป — คลายให้หย่อนลง";
-  }
+  const continuousMidi = reading ? reading.continuousMidi : pinned ? continuousMidiOf(pinned.freq) : 69;
+  const centerN = Math.round(continuousMidi);
+  const strip = Array.from({ length: STRIP_RADIUS * 2 + 1 }, (_, i) => {
+    const n = centerN - STRIP_RADIUS + i;
+    return { n, name: noteNameAt(n), left: 50 + (continuousMidi - n) * STRIP_UNIT_PERCENT };
+  });
+
+  const fillFrom = Math.min(50, markerPercent);
+  const fillTo = Math.max(50, markerPercent);
 
   return (
     <div className="tuner-card">
@@ -187,33 +217,46 @@ export default function Tuner() {
         })}
       </div>
       <p className="tuner-hint">
-        {pinned ? `กำลังจับเสียงเทียบกับสาย ${pinned.note} (แตะซ้ำเพื่อยกเลิก)` : "แตะเลือกสายที่จะตั้ง หรือปล่อยไว้ให้ระบบจับสายที่ใกล้เสียงที่สุดอัตโนมัติ"}
+        {pinned
+          ? `กำลังจับเสียงเทียบกับสาย ${pinned.note} (แตะซ้ำเพื่อยกเลิก)`
+          : "แตะเลือกสายที่จะตั้ง หรือปล่อยไว้ให้ระบบจับสายที่ใกล้เสียงที่สุดอัตโนมัติ"}
       </p>
 
-      <div className={`tuner-display${status === "listening" ? "" : " tuner-display-off"}`}>
-        <div className="tuner-note-big">{reading ? reading.target.note : "—"}</div>
-        <div className="tuner-freq">{reading ? `${reading.freq.toFixed(1)} Hz` : status === "listening" ? "กำลังฟัง…" : "ยังไม่เริ่มฟังเสียง"}</div>
+      <div className={`tuner-strip-panel${status === "listening" ? "" : " tuner-strip-panel-off"}`}>
+        <div className="tuner-center-line" />
 
-        <div className="tuner-gauge">
-          <div className="tuner-gauge-track">
-            <div className="tuner-gauge-zone" />
-            {Array.from({ length: 11 }).map((_, i) => (
-              <div key={i} className="tuner-gauge-tick" style={{ left: `${i * 10}%` }} />
+        <div className="tuner-cents-row">
+          <div className="tuner-cents-track">
+            {Array.from({ length: 21 }).map((_, i) => (
+              <div key={i} className="tuner-cents-tick" style={{ left: `${i * 5}%` }} />
             ))}
-            <div
-              className={`tuner-gauge-needle${reading ? (inTune ? " in-tune" : "") : ""}`}
-              style={{ left: `${reading ? needlePercent : 50}%` }}
-            />
-          </div>
-          <div className="tuner-gauge-labels">
-            <span>ต่ำ</span>
-            <span>ตรง</span>
-            <span>สูง</span>
+            {reading ? (
+              <div
+                className={`tuner-cents-fill${inTune ? " in-tune" : ""}`}
+                style={{ left: `${fillFrom}%`, width: `${fillTo - fillFrom}%` }}
+              />
+            ) : null}
+            <span className="tuner-cents-label plus">+10</span>
+            <span className="tuner-cents-label minus">-10</span>
+            {reading ? (
+              <div
+                className={`tuner-cents-marker${inTune ? " in-tune" : ""}`}
+                style={{ left: `${markerPercent}%` }}
+              />
+            ) : null}
           </div>
         </div>
 
-        <div className={`tuner-verdict${inTune ? " in-tune" : ""}`}>{verdict}</div>
+        <div className="tuner-note-strip">
+          {strip.map((cell) => (
+            <div key={cell.n} className="tuner-note-cell" style={{ left: `${cell.left}%` }}>
+              {cell.name}
+            </div>
+          ))}
+        </div>
       </div>
+
+      <HzReadout value={reading ? reading.freq : null} />
 
       <div className="tuner-controls">
         {status === "listening" ? (

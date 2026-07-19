@@ -1270,87 +1270,133 @@ nav.site-nav a:hover {
   margin: 12px 0 0;
 }
 
-.tuner-display {
+.tuner-strip-panel {
+  position: relative;
   margin-top: 24px;
-  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  overflow: hidden;
   transition: opacity 0.2s;
 }
-.tuner-display-off {
+.tuner-strip-panel-off {
   opacity: 0.55;
 }
-.tuner-note-big {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(48px, 12vw, 72px);
-  line-height: 1;
-  color: var(--green-deep);
-}
-.tuner-freq {
-  color: var(--muted);
-  font-size: 14px;
-  margin-top: 6px;
-  font-variant-numeric: tabular-nums;
+.tuner-center-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--red);
+  z-index: 2;
+  pointer-events: none;
 }
 
-.tuner-gauge {
-  margin: 22px auto 0;
-  max-width: 420px;
+.tuner-cents-row {
+  padding: 12px 0 10px;
+  border-bottom: 1px solid var(--line);
 }
-.tuner-gauge-track {
+.tuner-cents-track {
   position: relative;
-  height: 10px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--red-tint), var(--paper) 45%, var(--green-tint) 50%, var(--paper) 55%, var(--red-tint));
-  border: 1px solid var(--line);
+  height: 20px;
 }
-.tuner-gauge-zone {
+.tuner-cents-tick {
   position: absolute;
-  left: 45%;
-  right: 45%;
-  top: -1px;
-  bottom: -1px;
-  border-left: 1px solid var(--green);
-  border-right: 1px solid var(--green);
-}
-.tuner-gauge-tick {
-  position: absolute;
-  top: 100%;
+  top: 0;
   width: 1px;
-  height: 5px;
+  height: 6px;
   background: var(--line);
+}
+.tuner-cents-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--red-tint);
+}
+.tuner-cents-fill.in-tune {
+  background: var(--green-tint);
+}
+.tuner-cents-label {
+  position: absolute;
+  top: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
   transform: translateX(-50%);
 }
-.tuner-gauge-needle {
-  position: absolute;
-  top: 50%;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--red);
-  border: 2px solid var(--paper-raised);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-  transform: translate(-50%, -50%);
-  transition: left 0.08s linear, background 0.15s;
+.tuner-cents-label.plus {
+  left: 30%;
 }
-.tuner-gauge-needle.in-tune {
+.tuner-cents-label.minus {
+  left: 70%;
+}
+.tuner-cents-marker {
+  position: absolute;
+  top: -3px;
+  width: 12px;
+  height: 12px;
+  background: var(--red);
+  transform: translateX(-50%) rotate(45deg);
+  transition: left 0.08s linear, background 0.15s;
+  z-index: 3;
+}
+.tuner-cents-marker.in-tune {
   background: var(--green);
 }
-.tuner-gauge-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 10px;
+
+.tuner-note-strip {
+  position: relative;
+  height: clamp(64px, 16vw, 96px);
+}
+.tuner-note-cell {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(32px, 9vw, 52px);
+  color: var(--ink);
+  white-space: nowrap;
+  transition: left 0.08s linear;
 }
 
-.tuner-verdict {
-  margin-top: 18px;
-  font-weight: 800;
-  font-size: 16px;
-  color: var(--ink);
+.tuner-hz {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 3px;
+  margin-top: 22px;
 }
-.tuner-verdict.in-tune {
-  color: var(--green);
+.tuner-hz-digit,
+.tuner-hz-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper-raised);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  color: var(--green-deep);
+}
+.tuner-hz-dot {
+  min-width: 12px;
+  border: none;
+  background: none;
+  align-items: flex-end;
+  padding-bottom: 4px;
+}
+.tuner-hz-unit {
+  margin-left: 8px;
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 15px;
+  align-self: center;
 }
 
 .tuner-controls {
