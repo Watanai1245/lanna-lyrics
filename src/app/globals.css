@@ -274,6 +274,7 @@ nav.site-nav a:hover {
   letter-spacing: 0.12em;
   color: var(--gold);
 }
+.section-head h1,
 .section-head h2 {
   font-size: clamp(26px, 3.2vw, 36px);
   margin-top: 10px;
@@ -1156,6 +1157,161 @@ nav.site-nav a:hover {
   .poster-foot {
     margin: 0 8px;
   }
+}
+
+/* ---------- tuner ---------- */
+.tuner-card {
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--paper-raised);
+  border: 2px solid var(--gold-soft);
+  border-radius: 16px;
+  padding: 28px 24px 32px;
+}
+.tuner-strings {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+@media (min-width: 560px) {
+  .tuner-strings {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+.tuner-string-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  padding: 10px 4px;
+  cursor: pointer;
+}
+.tuner-string-note {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 17px;
+  color: var(--ink);
+}
+.tuner-string-label {
+  font-size: 10.5px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.3;
+}
+.tuner-string-btn.active {
+  border-color: var(--gold);
+  background: var(--gold-tint);
+}
+.tuner-string-btn.pinned {
+  border-color: var(--green);
+  background: var(--green-tint);
+}
+.tuner-string-btn.pinned .tuner-string-note {
+  color: var(--green-deep);
+}
+.tuner-hint {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13.5px;
+  margin: 12px 0 0;
+}
+
+.tuner-display {
+  margin-top: 24px;
+  text-align: center;
+  transition: opacity 0.2s;
+}
+.tuner-display-off {
+  opacity: 0.55;
+}
+.tuner-note-big {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(48px, 12vw, 72px);
+  line-height: 1;
+  color: var(--green-deep);
+}
+.tuner-freq {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tuner-gauge {
+  margin: 22px auto 0;
+  max-width: 420px;
+}
+.tuner-gauge-track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--red-tint), var(--paper) 45%, var(--green-tint) 50%, var(--paper) 55%, var(--red-tint));
+  border: 1px solid var(--line);
+}
+.tuner-gauge-zone {
+  position: absolute;
+  left: 45%;
+  right: 45%;
+  top: -1px;
+  bottom: -1px;
+  border-left: 1px solid var(--green);
+  border-right: 1px solid var(--green);
+}
+.tuner-gauge-tick {
+  position: absolute;
+  top: 100%;
+  width: 1px;
+  height: 5px;
+  background: var(--line);
+  transform: translateX(-50%);
+}
+.tuner-gauge-needle {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 2px solid var(--paper-raised);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transform: translate(-50%, -50%);
+  transition: left 0.08s linear, background 0.15s;
+}
+.tuner-gauge-needle.in-tune {
+  background: var(--green);
+}
+.tuner-gauge-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 10px;
+}
+
+.tuner-verdict {
+  margin-top: 18px;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--ink);
+}
+.tuner-verdict.in-tune {
+  color: var(--green);
+}
+
+.tuner-controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 26px;
+}
+.tuner-error {
+  text-align: center;
+  color: var(--red);
+  font-size: 14px;
+  margin-top: 16px;
 }
 
 @media print {

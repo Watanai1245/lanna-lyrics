@@ -6,6 +6,7 @@ const NAV = [
   { href: "/about", label: "ประวัติโรงเรียน" },
   { href: "/staff", label: "บุคลากร" },
   { href: "/songs", label: "คลังโน้ตเพลง" },
+  { href: "/tuner", label: "เครื่องตั้งสาย" },
   { href: "/media", label: "สื่อการสอน" },
   { href: "/achievements", label: "ผลงาน" },
   { href: "/contact", label: "ติดต่อเรา" },
