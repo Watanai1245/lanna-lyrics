@@ -10,8 +10,8 @@ function isNoCapture(node: unknown): boolean {
 
 export default function PosterActions({ song }: { song: SongData }) {
   const posterRef = useRef<HTMLDivElement>(null);
-  const [busy, setBusy] = useState<"download" | "fullscreen" | null>(null);
-  const [fsImage, setFsImage] = useState<string | null>(null);
+  const [busy, setBusy] = useState<"download" | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function capture(): Promise<string | null> {
@@ -42,21 +42,9 @@ export default function PosterActions({ song }: { song: SongData }) {
     }
   }
 
-  async function handleFullscreen() {
+  function handleFullscreen() {
     setError(null);
-    setBusy("fullscreen");
-    try {
-      const dataUrl = await capture();
-      if (!dataUrl) {
-        setError("สร้างภาพไม่สำเร็จ ลองใหม่อีกครั้ง");
-        return;
-      }
-      setFsImage(dataUrl);
-    } catch {
-      setError("สร้างภาพไม่สำเร็จ ลองใหม่อีกครั้ง");
-    } finally {
-      setBusy(null);
-    }
+    setIsFullscreen(true);
   }
 
   function handlePrint() {
@@ -66,7 +54,7 @@ export default function PosterActions({ song }: { song: SongData }) {
   const actions = (
     <div className="poster-actions">
       <button className="btn btn-outline" onClick={handleFullscreen} disabled={busy !== null}>
-        {busy === "fullscreen" ? "กำลังเตรียมภาพ…" : "⛶ ดูเต็มจอ"}
+        ⛶ ดูเต็มจอ
       </button>
       <button className="btn btn-outline" onClick={handlePrint}>
         พิมพ์
@@ -84,16 +72,17 @@ export default function PosterActions({ song }: { song: SongData }) {
         <SongPoster song={song} actions={actions} />
       </div>
 
-      {fsImage ? (
+      {isFullscreen ? (
         <div className="fs-overlay" role="dialog" aria-modal="true" aria-label={`โน้ตเพลง ${song.title} แบบเต็มจอ`}>
           <div className="fs-topbar">
             <span>{song.title}</span>
-            <button className="fs-close" onClick={() => setFsImage(null)} aria-label="ปิด">
+            <button className="fs-close" onClick={() => setIsFullscreen(false)} aria-label="ปิด">
               ✕
             </button>
           </div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={fsImage} alt={`โน้ตเพลง ${song.title}`} />
+          <div className="fs-content">
+            <SongPoster song={song} />
+          </div>
         </div>
       ) : null}
     </>

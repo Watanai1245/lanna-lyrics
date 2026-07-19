@@ -638,20 +638,19 @@ nav.site-nav a:hover {
   inset: 0;
   background: #0b0f0c;
   z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
-.fs-overlay img {
-  max-width: 100vw;
-  max-height: calc(100vh - 56px);
-  width: auto;
-  height: auto;
-  object-fit: contain;
+.fs-overlay .fs-content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 72px 14px 40px;
+}
+.fs-overlay .fs-content .poster {
+  border-color: var(--gold-soft);
 }
 .fs-overlay .fs-topbar {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -660,9 +659,11 @@ nav.site-nav a:hover {
   align-items: center;
   justify-content: space-between;
   padding: 0 18px;
+  background: #0b0f0c;
   color: #efefe6;
   font-size: 14.5px;
   font-weight: 700;
+  z-index: 1;
 }
 .fs-overlay .fs-close {
   width: 34px;
@@ -675,10 +676,7 @@ nav.site-nav a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.fs-overlay .fs-loading {
-  color: #cfd6c4;
-  font-size: 15px;
+  flex-shrink: 0;
 }
 
 /* ---------- news ---------- */
