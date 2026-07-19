@@ -47,17 +47,10 @@ export default function PosterActions({ song }: { song: SongData }) {
     setIsFullscreen(true);
   }
 
-  function handlePrint() {
-    window.print();
-  }
-
   const actions = (
     <div className="poster-actions">
       <button className="btn btn-outline" onClick={handleFullscreen} disabled={busy !== null}>
         ⛶ ดูเต็มจอ
-      </button>
-      <button className="btn btn-outline" onClick={handlePrint}>
-        พิมพ์
       </button>
       <button className="btn btn-green" onClick={handleDownload} disabled={busy !== null}>
         {busy === "download" ? "กำลังสร้างภาพ…" : "↓ ดาวน์โหลดภาพ"}
