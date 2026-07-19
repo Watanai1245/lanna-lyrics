@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { SCHOOL_NAME, SCHOOL_SUB } from "@/lib/site";
 
@@ -13,6 +16,8 @@ const NAV = [
 ];
 
 export default function SiteHeader({ current }: { current?: string }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <header className="site-header">
       <div className="wrap site-row">
@@ -24,9 +29,27 @@ export default function SiteHeader({ current }: { current?: string }) {
             <div className="school-sub">{SCHOOL_SUB}</div>
           </div>
         </Link>
-        <nav className="site-nav">
+
+        <button
+          type="button"
+          className="nav-toggle"
+          aria-label={menuOpen ? "ปิดเมนู" : "เปิดเมนู"}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+
+        <nav className={`site-nav${menuOpen ? " open" : ""}`}>
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className={current === item.href ? "current" : ""}>
+            <Link
+              key={item.href}
+              href={item.href}
+              className={current === item.href ? "current" : ""}
+              onClick={() => setMenuOpen(false)}
+            >
               {item.label}
             </Link>
           ))}
